@@ -21,7 +21,7 @@ namespace Project2 {
         {
             InitializeComponent();
         }
-
+        
     protected:
         ~MyForm()
         {
@@ -50,14 +50,6 @@ namespace Project2 {
     private: System::Drawing::Printing::PrintDocument^ printDocument1;
     private: System::Windows::Forms::PrintPreviewDialog^ printPreviewDialog1;
     private: System::Windows::Forms::TextBox^ textBox2;
-
-
-
-
-
-
-
-
 
     protected:
     private:
@@ -191,6 +183,7 @@ namespace Project2 {
             this->button1->TabIndex = 11;
             this->button1->Text = L"Найти сотрудника";
             this->button1->UseVisualStyleBackColor = true;
+            this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
             // 
             // menuStrip1
             // 
@@ -266,51 +259,11 @@ namespace Project2 {
         }
 
     private: System::Void SetText_Click(System::Object^ sender, System::EventArgs^ e) {
-        this->textBox2->Text = "";
-        if (!IsStringNumber(this->Age->Text) || !IsStringNumber(this->Salary->Text)) {
-            this->textBox2->Text += "Некорректный ввод данных.\r\nВозраст и зарплата должны быть числами.\r\nПопробуйте снова.\r\n";
-            return;
-        }
-        Worker newWorker;
-        std::string name = marshal_as<std::string>(this->WorkerName->Text);
-        int age = Convert::ToInt32(this->Age->Text);
-        int salary = Convert::ToInt32(this->Salary->Text);
-        
-        if (age < 18) {
-            this->textBox2->Text += "Некорректный ввод данных.\nВозраст не может быть меньше 18.\r\nПопробуйте снова.\r\n";
-            return;
-        }
-        else if (salary < 0) {
-            this->textBox2->Text += "Некорректный ввод данных.\nЗарплата не может быть отрицательной.\r\nПопробуйте снова.";
-            return;
-        }
-        else if (name.empty() || name.find(" ") == 0)
-        {
-            this->textBox2->Text += "Некорректный ввод данных.\r\nНе введено имя сотрудника.\r\nПопробуйте снова.";
-            return;
-        }
-        else {
-            newWorker.enterdata(name, age, salary);
-            this->WorkerName->Text = "";
-            this->Age->Text = "";
-            this->Salary->Text = "";
-            this->textBox2->Text = "Сотрудник сохранен.";
-        }
+        addWorker();
     }
-           void Salary_Enter(Object^ /*sender*/, System::EventArgs^ /*e*/) {
-               gcnew System::EventHandler(this, &MyForm::SetText_Click);
-           }
 
     private: System::Void Show_Click(System::Object^ sender, System::EventArgs^ e) {
-        if (workers.size() > 0)
-            this->textBox2->Text = "Всего найдено сотрудников: " + workers.size() + "\r\n\r\n";
-        else
-            this->textBox2->Text = "В настоящий момент нет сотрудников.";
-        for (const auto& worker : workers) {
-            this->textBox2->Text += "Имя:\r\t\r\t" + marshal_as<System::String^>(worker.GetName()) + "\r\n" +
-                "Возраст:\r\t\r\t" + Convert::ToString(worker.GetAge()) + "\r\n" +
-                "Зарплата:\r\t" + Convert::ToString(worker.GetSalary()) + "\r\n\r\n";
-        }
+        getWorkersList();
     }
            Void Enter_KeyPress(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) {
                if (e->KeyChar == (char)Keys::Enter)
@@ -319,7 +272,6 @@ namespace Project2 {
                    this->SetText_Click(sender, System::EventArgs::Empty);
                    WorkerName->Focus();
                }
-               
            }
            Void EnterToTab(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) {
                if (e->KeyChar == (char)Keys::Enter)
@@ -328,6 +280,86 @@ namespace Project2 {
                    SendKeys::Send("{TAB}");
                }
            }
-          
+           void addWorker() {
+               this->textBox2->Text = "";
+               if (!IsStringNumber(this->Age->Text) || !IsStringNumber(this->Salary->Text)) {
+                   this->textBox2->Text += "Некорректный ввод данных.\r\nВозраст и зарплата должны быть числами.\r\nПопробуйте снова.\r\n";
+                   return;
+               }
+               Worker newWorker;
+               std::string name = marshal_as<std::string>(this->WorkerName->Text);
+               int age = Convert::ToInt32(this->Age->Text);
+               int salary = Convert::ToInt32(this->Salary->Text);
+
+               if (age < 18) {
+                   this->textBox2->Text += "Некорректный ввод данных.\nВозраст не может быть меньше 18.\r\nПопробуйте снова.\r\n";
+                   return;
+               }
+               else if (salary < 0) {
+                   this->textBox2->Text += "Некорректный ввод данных.\nЗарплата не может быть отрицательной.\r\nПопробуйте снова.";
+                   return;
+               }
+               else if (name.empty() || name.find(" ") == 0)
+               {
+                   this->textBox2->Text += "Некорректный ввод данных.\r\nНе введено имя сотрудника.\r\nПопробуйте снова.";
+                   return;
+               }
+               else {
+                   newWorker.enterdata(name, age, salary);
+                   this->WorkerName->Text = "";
+                   this->Age->Text = "";
+                   this->Salary->Text = "";
+                   this->textBox2->Text = "Сотрудник сохранен.";
+               }
+           }
+           bool checkWorkersList() {
+               if (!workers.empty()) {
+                   this->textBox2->Text = "Всего найдено сотрудников: " + workers.size() + "\r\n\r\n";
+                   return true;
+               }
+               else {
+                   this->textBox2->Text = "В настоящий момент нет сотрудников.";
+                   return false;
+               }
+           }
+
+           void getWorkersList() {
+               if (checkWorkersList()) {
+                   for (const auto& worker : workers) {
+                       this->textBox2->Text += "Имя:\r\t\r\t" + marshal_as<System::String^>(worker.GetName()) + "\r\n" +
+                           "Возраст:\r\t\r\t" + Convert::ToString(worker.GetAge()) + "\r\n" +
+                           "Зарплата:\r\t" + Convert::ToString(worker.GetSalary()) + "\r\n\r\n";
+                   }
+               }
+           }
+           void workerSearch() {
+               if (checkWorkersList()) {
+                   std::vector<int> index;
+                   std::string search = marshal_as<std::string>(this->textBox1->Text);
+                   for (int i = 0; i < workers.size(); i++) {
+                       if (workers[i].GetName() == search) {
+                           index.push_back(i);
+                       }
+                   }
+                   if (index.empty()) {
+                       this->textBox2->Text = "Сотрудник не найден";
+                   }
+                   else {
+                       this->textBox2->Text = "Найдено сотрудников: "+ index.size() + "\r\n";
+                       for (size_t i = 0; i < index.size(); i++) {
+                           printdata(index[i]);
+                       }
+                   }
+               }
+           }
+           void printdata(int i) {
+               this->textBox2->Text += "Имя:\r\t\r\t" + marshal_as<System::String^>(workers[i].GetName()) + "\r\n" +
+                   "Возраст:\r\t\r\t" + Convert::ToString(workers[i].GetAge()) + "\r\n" +
+                   "Зарплата:\r\t" + Convert::ToString(workers[i].GetSalary()) + "\r\n\r\n";
+           }
+           
+private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
+    workerSearch();
+}
 };
 }

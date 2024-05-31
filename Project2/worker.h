@@ -18,7 +18,7 @@ public:
         this->salary = salary;
         workers.push_back(*this);
     }
-
+    
     std::string GetName() const {
         return this->name;
     }
